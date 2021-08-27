@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>5.0</version>
+    <date>2021-08-27T08:06:39Z</date>
+    <groups>
+        <group>
+            <name>NAS</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>QNAP TS-469</template>
+            <name>QNAP TS-469</name>
+            <description>QNAP SNMP Simple Template based on MiB files downloaded form devices.&#13;
+Author Piotr Najman&#13;
+Created : 20210614&#13;
+Last Modified : 20210827</description>
+            <groups>
+                <group>
+                    <name>NAS</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>System</name>
+                </application>
+            </applications>
+            <items>
+                <item>
+                    <name>CPU usage</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.4.1.24681.1.2.1.0</snmp_oid>
+                    <key>system.cpu.usage</key>
+                    <history>7d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <applications>
+                        <application>
+                            <name>System</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>REGEX</type>
+                            <params>([0-9]+\.[0-9]+)
+\1</params>
+                        </step>
+                    </preprocessing>
+                    <triggers>
+                        <trigger>
+                            <expression>{min(5m)}&gt;{$CPU.UTIL.CRIT}</expression>
+                            <name>High CPU utilization (over {$CPU.UTIL.CRIT}% for 5m)</name>
+                            <priority>WARNING</priority>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>Firmware upgrade</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.4.1.55062.1.12.7.0</snmp_oid>
+                    <key>system.firmware.upgrade</key>
+                    <delay>1d</delay>
+                    <history>7d</history>
+                    <trends>0</trends>
+                    <status>DISABLED</status>
+                    <applications>
+                        <application>
+                            <name>System</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{last()}&gt;0</expression>
+                            <name>Firmware upgrade available</name>
+                            <priority>INFO</priority>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>Free memory</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.4.1.24681.1.2.3.0</snmp_oid>
+                    <key>system.mem.free</key>
+                    <history>7d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>MB</units>
+                    <applications>
+                        <application>
+                            <name>System</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>REGEX</type>
+                            <params>([0-9]+\.[0-9]+)
+\1</params>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>Total memory</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.4.1.24681.1.2.2.0</snmp_oid>
+                    <key>system.mem.total</key>
+                    <delay>1d</delay>
+                    <history>7d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>MB</units>
+                    <applications>
+                        <application>
+                            <name>System</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>REGEX</type>
+                            <params>([0-9]+\.[0-9]+)
+\1</params>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>Memory usage</name>
+                    <type>CALCULATED</type>
+                    <key>system.mem.usage</key>
+                    <history>7d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>((last(system.mem.total)-last(system.mem.free))/last(system.mem.total))*100</params>
+                    <applications>
+                        <application>
+                            <name>System</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{min(5m)}&gt;{$MEMORY.UTIL.MAX}</expression>
+                            <name>High memory utilization (&gt;{$MEMORY.UTIL.MAX}% for 5m)</name>
+                            <priority>AVERAGE</priority>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>System temperature</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>1.3.6.1.4.1.24681.1.2.6.0</snmp_oid>
+                    <key>system.temp</key>
+                    <history>7d</history>
+                    <units>C</units>
+                    <applications>
+                        <application>
+                            <name>System</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>REGEX</type>
+                            <params>([0-9]+)
+\1</params>
+                        </step>
+                    </preprocessing>
+                </item>
+            </items>
+            <discovery_rules>
+                <discovery_rule>
+                    <name>Hard disks</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>discovery[{#HDINDEX},1.3.6.1.4.1.24681.1.2.11.1.1,{#HDDESCR},1.3.6.1.4.1.24681.1.2.11.1.2]</snmp_oid>
+                    <key>system.hd</key>
+                    <delay>1d</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>{#HDDESCR} SMART status</name>
+                            <type>SNMP_AGENT</type>
+                            <snmp_oid>1.3.6.1.4.1.24681.1.2.11.1.7.{#HDINDEX}</snmp_oid>
+                            <key>hd.smart.[{#HDINDEX}]</key>
+                            <trends>0</trends>
+                            <value_type>TEXT</value_type>
+                            <applications>
+                                <application>
+                                    <name>System</name>
+                                </application>
+                            </applications>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{str(GOOD)}=0</expression>
+                                    <name>{#HDDESCR} SMART status isn't good.</name>
+                                    <priority>AVERAGE</priority>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>{#HDDESCR} temperature</name>
+                            <type>SNMP_AGENT</type>
+                            <snmp_oid>iso.3.6.1.4.1.24681.1.2.11.1.3.{#HDINDEX}</snmp_oid>
+                            <key>hd.temp.[{#HDINDEX}]</key>
+                            <history>7d</history>
+                            <units>C</units>
+                            <applications>
+                                <application>
+                                    <name>System</name>
+                                </application>
+                            </applications>
+                            <preprocessing>
+                                <step>
+                                    <type>REGEX</type>
+                                    <params>([0-9]+)
+\1</params>
+                                </step>
+                            </preprocessing>
+                        </item_prototype>
+                    </item_prototypes>
+                </discovery_rule>
+                <discovery_rule>
+                    <name>Volumes</name>
+                    <type>SNMP_AGENT</type>
+                    <snmp_oid>discovery[{#VOLINDEX}, 1.3.6.1.4.1.24681.1.2.17.1.1, {#VOLDESCR}, 1.3.6.1.4.1.24681.1.2.17.1.2]</snmp_oid>
+                    <key>system.vol</key>
+                    <delay>1d</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>Free {#VOLDESCR} size</name>
+                            <type>SNMP_AGENT</type>
+                            <snmp_oid>1.3.6.1.4.1.24681.1.2.17.1.5.{#VOLINDEX}</snmp_oid>
+                            <key>system.vol.free.[{#VOLINDEX}]</key>
+                            <history>7d</history>
+                            <value_type>FLOAT</value_type>
+                            <units>TB</units>
+                            <applications>
+                                <application>
+                                    <name>System</name>
+                                </application>
+                            </applications>
+                            <preprocessing>
+                                <step>
+                                    <type>REGEX</type>
+                                    <params>([0-9]+\.[0-9]+)
+\1</params>
+                                </step>
+                            </preprocessing>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Total {#VOLDESCR} size</name>
+                            <type>SNMP_AGENT</type>
+                            <snmp_oid>1.3.6.1.4.1.24681.1.2.17.1.4.{#VOLINDEX}</snmp_oid>
+                            <key>system.vol.total.[{#VOLINDEX}]</key>
+                            <delay>1d</delay>
+                            <history>7d</history>
+                            <value_type>FLOAT</value_type>
+                            <units>TB</units>
+                            <applications>
+                                <application>
+                                    <name>System</name>
+                                </application>
+                            </applications>
+                            <preprocessing>
+                                <step>
+                                    <type>REGEX</type>
+                                    <params>([0-9]+\.[0-9]+)
+\1</params>
+                                </step>
+                            </preprocessing>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>{#VOLDESCR} usage</name>
+                            <type>CALCULATED</type>
+                            <key>system.vol.usage.[{#VOLINDEX}]</key>
+                            <history>7d</history>
+                            <units>%</units>
+                            <params>((last(system.vol.total.[{#VOLINDEX}])-last(system.vol.free.[{#VOLINDEX}]))/last(system.vol.total.[{#VOLINDEX}]))*100</params>
+                            <applications>
+                                <application>
+                                    <name>System</name>
+                                </application>
+                            </applications>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{min(5m)}&gt;{$VOL.UTIL.CRIT}</expression>
+                                    <name>{#VOLDESCR} free space is critically low (used more than {$VOL.UTIL.CRIT}% for 5m)</name>
+                                    <priority>AVERAGE</priority>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{min(5m)}&gt;{$VOL.UTIL.WARN}</expression>
+                                    <name>{#VOLDESCR} free space is low (used more than {$VOL.UTIL.WARN}% for 5m)</name>
+                                    <priority>WARNING</priority>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{last()}&gt;{$VOL.UTIL.DIS}</expression>
+                                    <name>{#VOLDESCR} is FULL!</name>
+                                    <priority>DISASTER</priority>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Used {#VOLDESCR} size</name>
+                            <type>CALCULATED</type>
+                            <key>system.vol.used.[{#VOLINDEX}]</key>
+                            <history>7d</history>
+                            <value_type>FLOAT</value_type>
+                            <units>TB</units>
+                            <params>last(system.vol.total.[{#VOLINDEX}])-last(system.vol.free.[{#VOLINDEX}])</params>
+                            <applications>
+                                <application>
+                                    <name>System</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                    </item_prototypes>
+                    <graph_prototypes>
+                        <graph_prototype>
+                            <name>{#VOLDESCR} space</name>
+                            <width>300</width>
+                            <height>300</height>
+                            <yaxismax>0</yaxismax>
+                            <show_work_period>NO</show_work_period>
+                            <show_triggers>NO</show_triggers>
+                            <type>PIE</type>
+                            <show_3d>YES</show_3d>
+                            <graph_items>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>1A7C11</color>
+                                    <calc_fnc>LAST</calc_fnc>
+                                    <item>
+                                        <host>QNAP TS-469</host>
+                                        <key>system.vol.free.[{#VOLINDEX}]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>2</sortorder>
+                                    <color>F63100</color>
+                                    <calc_fnc>LAST</calc_fnc>
+                                    <item>
+                                        <host>QNAP TS-469</host>
+                                        <key>system.vol.used.[{#VOLINDEX}]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                    </graph_prototypes>
+                </discovery_rule>
+            </discovery_rules>
+            <macros>
+                <macro>
+                    <macro>{$CPU.UTIL.CRIT}</macro>
+                    <value>90</value>
+                </macro>
+                <macro>
+                    <macro>{$MEMORY.UTIL.MAX}</macro>
+                    <value>90</value>
+                </macro>
+                <macro>
+                    <macro>{$VOL.UTIL.CRIT}</macro>
+                    <value>90</value>
+                </macro>
+                <macro>
+                    <macro>{$VOL.UTIL.DIS}</macro>
+                    <value>98</value>
+                </macro>
+                <macro>
+                    <macro>{$VOL.UTIL.WARN}</macro>
+                    <value>80</value>
+                </macro>
+            </macros>
+        </template>
+    </templates>
+    <graphs>
+        <graph>
+            <name>Resources Utilisation</name>
+            <show_work_period>NO</show_work_period>
+            <show_triggers>NO</show_triggers>
+            <graph_items>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <color>00FF00</color>
+                    <item>
+                        <host>QNAP TS-469</host>
+                        <key>system.cpu.usage</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>2</sortorder>
+                    <color>00BFFF</color>
+                    <item>
+                        <host>QNAP TS-469</host>
+                        <key>system.mem.usage</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+    </graphs>
+</zabbix_export>
+
